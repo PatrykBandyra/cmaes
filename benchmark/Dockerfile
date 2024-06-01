@@ -12,5 +12,5 @@ RUN python3 do.py run-python
 
 WORKDIR /app
 RUN cp /benchmark/coco/code-experiments/build/python/example_experiment_for_beginners.py /app
-RUN mkdir scipy-optimize-fmin
 RUN python3 example_experiment_for_beginners.py
+RUN python3 -m cocopp -o output /app/exdata/scipy-optimize-fmin

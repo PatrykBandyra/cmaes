@@ -1,5 +1,6 @@
 FROM ubuntu:20.04
 
+# Setup of enviornment for coco framework
 WORKDIR /benchmark
 RUN apt-get update && apt-get install -y gcc python3 python3-pip git
 RUN apt-get install -y build-essential python-dev python-setuptools
@@ -10,6 +11,7 @@ RUN git clone https://github.com/numbbo/coco.git
 WORKDIR /benchmark/coco
 RUN python3 do.py run-python
 
+# Running benchmark and processing data
 WORKDIR /app
 RUN cp /benchmark/coco/code-experiments/build/python/example_experiment_for_beginners.py /app
 RUN python3 example_experiment_for_beginners.py

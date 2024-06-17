@@ -40,17 +40,23 @@ minimal_print = cocoex.utilities.MiniPrint()
 
 ### go
 for problem in suite:  # this loop will take several minutes or longer
-    max_iters = 5000
-    optimizer = CMAES(CocoProblem(dim=problem.dimension, lb=problem.lower_bounds, ub=problem.upper_bounds, f=problem),
-                      max_iters)
+
     problem.observe_with(observer)  # generates the data for cocopp post-processing
     x0 = problem.initial_solution
+    coco_problem = CocoProblem(dim=problem.dimension, lb=problem.lower_bounds, ub=problem.upper_bounds, f=problem)
     # apply restarts while neither the problem is solved nor the budget is exhausted
+
+
     while (problem.evaluations < problem.dimension * budget_multiplier and not problem.final_target_hit):
+
         #optimizer(problem, x0, disp=False)  # here we assume that `fmin` evaluates the final/returned solution
+
+        optimizer = CMAES(
+            coco_problem,
+            1000, xmean=None)
         optimizer.run()
-        # x0 = problem.lower_bounds + ((rand(problem.dimension) + rand(problem.dimension)) * (
-        #             problem.upper_bounds - problem.lower_bounds) / 2)
+        x0 = problem.lower_bounds + ((rand(problem.dimension) + rand(problem.dimension)) * (
+                    problem.upper_bounds - problem.lower_bounds) / 2)
     minimal_print(problem, final=problem.index == len(suite) - 1)
 
 ### post-process data

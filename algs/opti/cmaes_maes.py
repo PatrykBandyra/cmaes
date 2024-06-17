@@ -3,12 +3,15 @@ from .optimizer import *
 
 
 class CMAESM(Optimizer):
-    def __init__(self, func, count):
+    def __init__(self, func,  count,xmean:np.array = None ):
         super().__init__(func, count)
         self.nn = self.f.D
 
         self.xx = np.random.random(self.nn)
-        self.xmean = np.copy(self.xx)
+        if xmean is not None:
+            self.xmean = xmean
+        else:
+            self.xmean = np.copy(self.xx)
         self.sigma = 1
 
         self.lam = 4 + int(3 * np.log(self.nn))

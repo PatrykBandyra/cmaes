@@ -1,3 +1,5 @@
+from typing import Callable
+
 import numpy as np
 from .problem import Problem
 
@@ -106,3 +108,11 @@ class Schwefel(Problem):
             part1 += x[i] * np.sin(np.sqrt(np.abs(x[i])))
         re = 418.9829 * self.D - part1
         return re
+
+class CocoProblem(Problem):
+    def __init__(self, dim, lb, ub, f: Callable):
+        super().__init__(dim, lb, ub)
+        self.f = f
+
+    def evaluate(self, x):
+        return self.f(x)

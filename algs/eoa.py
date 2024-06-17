@@ -10,6 +10,6 @@ from opti.cmaes_large import CMAESL
 from opti.cmaes_bipop import CMAESB
 
 if __name__ == "__main__":
-    TaskProb = Sphere(50, -50, 50)
-    Task = DE(TaskProb, 1000)
+    TaskProb = Rosenbrock(2, -50, 50)
+    Task = CMAES(TaskProb, 5000)
     Task.run()

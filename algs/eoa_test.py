@@ -4,12 +4,13 @@ from opti.de import DE
 from opti.cmaes import CMAES
 from opti.cmaes_maes import CMAESM
 from opti.cmaes_large import CMAESL
-
+from opti.maes import CMAES2
+from opti.maes_ipop import CMAESM_IPOP
 
 class TestClass(object):
     def test_1(self):
         task_p = Sphere(50, -50, 50)
-        task = DE(task_p, 1000)
+        task = CMAES2(task_p, 1000)
         task.run()
         assert task.opti_f < 1
 

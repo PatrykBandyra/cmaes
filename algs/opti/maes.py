@@ -2,7 +2,7 @@ import numpy as np
 from .optimizer import *
 
 
-class CMAESM(Optimizer):
+class CMAES2(Optimizer):
     """
     Covariance Matrix Adaptation Evolution Strategy with Mirrored Sampling
 

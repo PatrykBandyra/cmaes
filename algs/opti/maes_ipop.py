@@ -4,7 +4,7 @@ from .optimizer import *
 
 class CMAESM_IPOP(Optimizer):
     """
-    Covariance Matrix Adaptation Evolution Strategy with Mirrored Sampling
+    Covariance Matrix Adaptation Evolution Strategy
 
     Parameters
     ----------

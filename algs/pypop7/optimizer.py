@@ -70,7 +70,8 @@ class Optimizer(object):
         self.seed_optimization = options.get('seed_optimization', self.rng.integers(np.iinfo(np.int64).max))
         self.rng_optimization = np.random.default_rng(self.seed_optimization)
         self.saving_fitness = options.get('saving_fitness', 0)
-        self.verbose = options.get('verbose', 10)
+        # FIXME zmienilem na 0
+        self.verbose = options.get('verbose', 0)
 
         # auxiliary members
         self.Terminations, self.termination_signal = Terminations, 0  # 0 -> NO_TERMINATION

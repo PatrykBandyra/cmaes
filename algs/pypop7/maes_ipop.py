@@ -1,6 +1,6 @@
 import numpy as np  # engine for numerical computing
-
 from ES import ES  # abstract class of all evolution strategies (ES)
+import csv
 
 
 class MAES_IPOP(ES):
@@ -99,41 +99,52 @@ class MAES_IPOP(ES):
     See the official Matlab version from Prof. Beyer:
     https://homepages.fhv.at/hgb/downloads/ForDistributionFastMAES.tar
     """
+
     def __init__(self, problem, options):
         ES.__init__(self, problem, options)
+        self.fitness_function = problem['fitness_function']
+        # File to store stagnation reasons and ipop
+        self.ipop_file = "ipop_log.csv"
+
         self.options = options
         self.c_s = None
         self.c_1 = None
         self.c_w = None
         self.d_sigma = None
         self._alpha_cov = 2.0
+        self.max_populationsize = 5000
         self._s_1 = None
         self._s_2 = None
         self._fast_version = options.get('_fast_version', False)
         if not self._fast_version:
             self._diag_one = np.eye(self.ndim_problem)
-        self.n_individuals = options.get('n_individuals', 100)  # Default population size
+
+        # Dynamic population size based on lambda calculation
+        self.n_individuals = options.get('n_individuals', 4 + int(3 * np.log(problem['ndim_problem'])))
+
+        if self.n_individuals > self.max_populationsize:
+            self.n_individuals = self.max_populationsize
+
         self._initialize_history()
 
     def _initialize_history(self):
         self.history = []
 
     def _set_c_w(self):
-        return np.minimum(1.0 - self.c_1, self._alpha_cov*(self._mu_eff + 1.0/self._mu_eff - 2.0) /
-                          (np.power(self.ndim_problem + 2.0, 2) + self._alpha_cov*self._mu_eff/2.0))
+        return np.minimum(1.0 - self.c_1, self._alpha_cov * (self._mu_eff + 1.0 / self._mu_eff - 2.0) /
+                          (np.power(self.ndim_problem + 2.0, 2) + self._alpha_cov * self._mu_eff / 2.0))
 
     def _set_d_sigma(self):
-        return 1.0 + self.c_s + 2.0*np.maximum(0.0, np.sqrt((self._mu_eff - 1.0)/(self.ndim_problem + 1.0)) - 1.0)
+        return 1.0 + self.c_s + 2.0 * np.maximum(0.0, np.sqrt((self._mu_eff - 1.0) / (self.ndim_problem + 1.0)) - 1.0)
 
     def initialize(self, is_restart=False):
-
         self.history = []
-        self.c_s = self.options.get('c_s', (self._mu_eff + 2.0)/(self._mu_eff + self.ndim_problem + 5.0))
-        self.c_1 = self.options.get('c_1', self._alpha_cov/(np.power(self.ndim_problem + 1.3, 2) + self._mu_eff))
+        self.c_s = self.options.get('c_s', (self._mu_eff + 2.0) / (self._mu_eff + self.ndim_problem + 5.0))
+        self.c_1 = self.options.get('c_1', self._alpha_cov / (np.power(self.ndim_problem + 1.3, 2) + self._mu_eff))
         self.c_w = self.options.get('c_w', self._set_c_w())
         self.d_sigma = self.options.get('d_sigma', self._set_d_sigma())
         self._s_1 = 1.0 - self.c_s
-        self._s_2 = np.sqrt(self._mu_eff*self.c_s*(2.0 - self.c_s))
+        self._s_2 = np.sqrt(self._mu_eff * self.c_s * (2.0 - self.c_s))
         z = np.empty((self.n_individuals, self.ndim_problem))  # Gaussian noise for mutation
         d = np.empty((self.n_individuals, self.ndim_problem))  # search directions
         mean = self._initialize_mean(is_restart)  # mean of Gaussian search distribution
@@ -150,7 +161,7 @@ class MAES_IPOP(ES):
                 return z, d, y
             z[k] = self.rng_optimization.standard_normal((self.ndim_problem,))
             d[k] = np.dot(tm, z[k])
-            y[k] = self._evaluate_fitness(mean + self.sigma*d[k], args)
+            y[k] = self._evaluate_fitness(mean + self.sigma * d[k], args)
         return z, d, y
 
     def _update_distribution(self, z=None, d=None, mean=None, s=None, tm=None, y=None):
@@ -159,25 +170,25 @@ class MAES_IPOP(ES):
         if not self._fast_version:
             zz_w = np.zeros((self.ndim_problem, self.ndim_problem))
         for k in range(self.n_parents):
-            d_w += self._w[k]*d[order[k]]
-            z_w += self._w[k]*z[order[k]]
+            d_w += self._w[k] * d[order[k]]
+            z_w += self._w[k] * z[order[k]]
             if not self._fast_version:
-                zz_w += self._w[k]*np.outer(z[order[k]], z[order[k]])
+                zz_w += self._w[k] * np.outer(z[order[k]], z[order[k]])
         # update distribution mean
-        mean += self.sigma*d_w
+        mean += self.sigma * d_w
         # update evolution path (s) and transformation matrix (M)
-        s = self._s_1*s + self._s_2*z_w
+        s = self._s_1 * s + self._s_2 * z_w
         if not self._fast_version:
-            tm_1 = self.c_1*(np.outer(s, s) - self._diag_one)
-            tm_2 = self.c_w*(zz_w - self._diag_one)
-            tm += 0.5*np.dot(tm, tm_1 + tm_2)
+            tm_1 = self.c_1 * (np.outer(s, s) - self._diag_one)
+            tm_2 = self.c_w * (zz_w - self._diag_one)
+            tm += 0.5 * np.dot(tm, tm_1 + tm_2)
         else:
-            tm = (1.0 - 0.5*(self.c_1 + self.c_w))*tm + (0.5*self.c_1)*np.dot(
+            tm = (1.0 - 0.5 * (self.c_1 + self.c_w)) * tm + (0.5 * self.c_1) * np.dot(
                 np.dot(tm, s[:, np.newaxis]), s[np.newaxis, :])
             for k in range(self.n_parents):
-                tm += (0.5*self.c_w)*self._w[k]*np.outer(d[order[k]], z[order[k]])
+                tm += (0.5 * self.c_w) * self._w[k] * np.outer(d[order[k]], z[order[k]])
         # update global step-size
-        self.sigma *= np.exp(self.c_s/self.d_sigma*(np.linalg.norm(s)/self._e_chi - 1.0))
+        self.sigma *= np.exp(self.c_s / self.d_sigma * (np.linalg.norm(s) / self._e_chi - 1.0))
         return mean, s, tm
 
     def restart_reinitialize(self, z=None, d=None, mean=None, s=None, tm=None, y=None):
@@ -207,6 +218,13 @@ class MAES_IPOP(ES):
         # owing to its *quadratic* space complexity
         return results
 
+    def log_stagnation_reasons(self, reasons):
+        with open(self.ipop_file, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            individuals = self.n_individuals
+            writer.writerow([self._n_generations, self.fitness_function.__name__, self.ndim_problem, individuals, ', '.join(reasons)])
+
+
     def increment_pop_size(self):
         print("Population size: ", self.n_individuals)
         self.n_individuals *= 2  # Doubling the population size on stagnation
@@ -231,18 +249,29 @@ class MAES_IPOP(ES):
         if len(self.history) > (10.0 + ((30.0 * self.ndim_problem) / self.n_individuals)):
             self.history.pop(0)
 
-        is_objective_function_range_too_low = (len(self.history) == int(
-            10.0 + ((30.0 * self.ndim_problem) / self.n_individuals))) and \
-                                              ((np.max(self.history) == np.min(self.history)) or \
-                                               ((np.max(self.history) - np.min(self.history)) < 1e-12 and (
-                                                       np.ptp(fitness_values) < 1e-12)))
+
+        tol_fitness_function = 1e-12
+
+        # sprawdzamy czy historia jest dostatecznie długa aby mierzyc stagnacje
+        minimum_history_length = (len(self.history) == int(10.0 + ((30.0 * self.ndim_problem) / self.n_individuals)))
+
+        fitness_min_equals_max = (np.max(self.history) == np.min(self.history))
+        fitness_min_almost_eq_max = (np.max(self.history) - np.min(self.history)) < tol_fitness_function
+        fitness_function_peek2peek_too_small = (np.ptp(fitness_values) < tol_fitness_function)
+
+        fitness_fun_all_conditions = \
+            (fitness_min_equals_max or (fitness_min_almost_eq_max and fitness_function_peek2peek_too_small))
+
+        is_objective_function_range_too_low = minimum_history_length and fitness_fun_all_conditions
 
         if is_objective_function_range_too_low:
             reasons.append("No progress in optimization: range of best objective function values is too low.")
 
         # Heuristic 4: Standard deviation too small
         tolX = 1e-12 * self.sigma
-        is_standard_deviation_too_small = (np.all(np.abs(tm) < tolX) and np.all(np.abs(s) < tolX))
+        all_els_evolution_path_too_small = np.all(np.abs(s) < tolX)
+        all_matrix_m_elements_too_small = np.all(np.abs(tm) < tolX)
+        is_standard_deviation_too_small = (all_matrix_m_elements_too_small and all_els_evolution_path_too_small)
 
         if is_standard_deviation_too_small:
             reasons.append(f"Standard deviation too small: tolX = {tolX}")
@@ -270,12 +299,10 @@ class MAES_IPOP(ES):
                 "No effect coordinate: adding 0.2-standard deviation in each coordinate does not change the mean.")
 
         if reasons:
-            print("Stagnation detected for the following reasons:")
+            print(f"Stagnation detected in iteration {self._n_generations}, function {self.fitness_function.__name__} and dimensions {self.ndim_problem} for the following reasons:")
             for reason in reasons:
                 print(reason)
+            self.log_stagnation_reasons(reasons)
             return True
 
         return False
-
-
-

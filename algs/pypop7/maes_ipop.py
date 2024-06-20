@@ -222,7 +222,7 @@ class MAES_IPOP(ES):
         with open(self.ipop_file, mode='a', newline='') as file:
             writer = csv.writer(file)
             individuals = self.n_individuals
-            writer.writerow([self._n_generations, self.fitness_function.__name__, self.ndim_problem, individuals, ', '.join(reasons)])
+            writer.writerow([self._n_generations, self.fitness_function, self.ndim_problem, individuals, ', '.join(reasons)])
 
 
     def increment_pop_size(self):
@@ -299,7 +299,7 @@ class MAES_IPOP(ES):
                 "No effect coordinate: adding 0.2-standard deviation in each coordinate does not change the mean.")
 
         if reasons:
-            print(f"Stagnation detected in iteration {self._n_generations}, function {self.fitness_function.__name__} and dimensions {self.ndim_problem} for the following reasons:")
+            print(f"Stagnation detected in iteration {self._n_generations}, function {self.fitness_function} and dimensions {self.ndim_problem} for the following reasons:")
             for reason in reasons:
                 print(reason)
             self.log_stagnation_reasons(reasons)

@@ -1,9 +1,11 @@
 import numpy as np  # engine for numerical computing
-from ES import ES  # abstract class of all evolution strategies (ES)
+
 import csv
 
+from ES_hueristics import ES_heuristics
 
-class MAES_IPOP(ES):
+
+class MAES_IPOP(ES_heuristics):
     """Matrix Adaptation Evolution Strategy (MAES).
 
     .. note:: `MAES` is a powerful *simplified* version of the well-established `CMA-ES` algorithm nearly without
@@ -101,7 +103,7 @@ class MAES_IPOP(ES):
     """
 
     def __init__(self, problem, options):
-        ES.__init__(self, problem, options)
+        ES_heuristics.__init__(self, problem, options)
         self.fitness_function = problem['fitness_function']
         # File to store stagnation reasons and ipop
         self.ipop_file = "ipop_log.csv"
@@ -120,10 +122,10 @@ class MAES_IPOP(ES):
             self._diag_one = np.eye(self.ndim_problem)
 
         # Dynamic population size based on lambda calculation
-        self.n_individuals = options.get('n_individuals', 4 + int(3 * np.log(problem['ndim_problem'])))
+        #self.n_individuals = options.get('n_individuals', 4 + int(3 * np.log(problem['ndim_problem'])))
 
-        if self.n_individuals > self.max_populationsize:
-            self.n_individuals = self.max_populationsize
+        # if self.n_individuals > self.max_populationsize:
+        #     self.n_individuals = self.max_populationsize
 
         self._initialize_history()
 
@@ -192,12 +194,12 @@ class MAES_IPOP(ES):
         return mean, s, tm
 
     def restart_reinitialize(self, z=None, d=None, mean=None, s=None, tm=None, y=None):
-        if ES.restart_reinitialize(self, y):
+        if ES_heuristics.restart_reinitialize(self, y):
             z, d, mean, s, tm, y = self.initialize(True)
         return z, d, mean, s, tm, y
 
     def optimize(self, fitness_function=None, args=None):  # for all generations (iterations)
-        fitness = ES.optimize(self, fitness_function)
+        fitness = ES_heuristics.optimize(self, fitness_function)
         z, d, mean, s, tm, y = self.initialize()
         while not self.termination_signal:
             # sample and evaluate offspring population
@@ -208,11 +210,7 @@ class MAES_IPOP(ES):
             self._print_verbose_info(fitness, y)
             self._n_generations += 1
 
-            # FIXME moje heurystyki wylaczone
-            if self.check_stagnation(y, s, tm, mean) and False:
-                self.increment_pop_size()
-                z, d, mean, s, tm, y = self.initialize(True)
-            if self.is_restart:
+            if self.check_stagnation(y, s, tm, mean):
                 z, d, mean, s, tm, y = self.restart_reinitialize(z, d, mean, s, tm, y)
         results = self._collect(fitness, y, mean)
         results['s'] = s
@@ -235,18 +233,17 @@ class MAES_IPOP(ES):
     def check_stagnation(self, y, s, tm, mean):
         reasons = []
 
-        # # heuristic 0:
-        # min_y = np.min(y)
-        # if min_y < self._list_fitness[-1]:
-        #     self._list_fitness.append(min_y)
-        # else:
-        #     self._list_fitness.append(self._list_fitness[-1])
-        # is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
-        # if len(self._list_fitness) >= self.stagnation:
-        #     is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
-        # if bool(is_restart_1) or bool(is_restart_2):
-        #     reasons.append("Stagnation detected.")
-
+        # heuristic 0:
+        min_y = np.min(y)
+        if min_y < self._list_fitness[-1]:
+            self._list_fitness.append(min_y)
+        else:
+            self._list_fitness.append(self._list_fitness[-1])
+        is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
+        if len(self._list_fitness) >= self.stagnation:
+            is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
+        if bool(is_restart_1) or bool(is_restart_2):
+            reasons.append("Stagnation detected.")
 
         # Heuristic 1: All fitness values are NaN or infinite
         if np.all(np.isnan(y)) or np.all(np.isinf(y)):
@@ -263,7 +260,6 @@ class MAES_IPOP(ES):
         self.history.append(y[0])
         if len(self.history) > (10.0 + ((30.0 * self.ndim_problem) / self.n_individuals)):
             self.history.pop(0)
-
 
         tol_fitness_function = 1e-12
 
@@ -314,7 +310,8 @@ class MAES_IPOP(ES):
                 "No effect coordinate: adding 0.2-standard deviation in each coordinate does not change the mean.")
 
         if reasons:
-            print(f"Stagnation detected in iteration {self._n_generations}, function {self.fitness_function} and dimensions {self.ndim_problem} for the following reasons:")
+            print(
+                f"Stagnation detected in iteration {self._n_generations}, function {self.fitness_function} and dimensions {self.ndim_problem} for the following reasons:")
             for reason in reasons:
                 print(reason)
             self.log_stagnation_reasons(reasons)

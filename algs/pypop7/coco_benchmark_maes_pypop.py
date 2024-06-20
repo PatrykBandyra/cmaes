@@ -12,7 +12,7 @@ import cocopp  # post-processing module of `COCO`
 from maes import MAES
 
 if __name__ == '__main__':
-    suite, output = 'bbob', 'coco-maes'
+    suite, output = 'bbob', 'coco-pypop-maes'
     budget_multiplier = 1e3  # or 1e4, 1e5, ...
     observer = cocoex.Observer(suite, 'result_folder: ' + output)
     minimal_print = cocoex.utilities.MiniPrint()

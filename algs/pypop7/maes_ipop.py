@@ -126,6 +126,8 @@ class MAES_IPOP(ES):
         return 1.0 + self.c_s + 2.0*np.maximum(0.0, np.sqrt((self._mu_eff - 1.0)/(self.ndim_problem + 1.0)) - 1.0)
 
     def initialize(self, is_restart=False):
+
+        self.history = []
         self.c_s = self.options.get('c_s', (self._mu_eff + 2.0)/(self._mu_eff + self.ndim_problem + 5.0))
         self.c_1 = self.options.get('c_1', self._alpha_cov/(np.power(self.ndim_problem + 1.3, 2) + self._mu_eff))
         self.c_w = self.options.get('c_w', self._set_c_w())
@@ -194,7 +196,7 @@ class MAES_IPOP(ES):
             mean, s, tm = self._update_distribution(z, d, mean, s, tm, y)
             self._print_verbose_info(fitness, y)
             self._n_generations += 1
-            if self.check_stagnation(y, s, tm):
+            if self.check_stagnation(y, s, tm, mean):
                 self.increment_pop_size()
                 z, d, mean, s, tm, y = self.initialize(True)
             if self.is_restart:
@@ -206,16 +208,20 @@ class MAES_IPOP(ES):
         return results
 
     def increment_pop_size(self):
+        print("Population size: ", self.n_individuals)
         self.n_individuals *= 2  # Doubling the population size on stagnation
+        print("Increased population size to: ", self.n_individuals)
 
-    def check_stagnation(self, fitness_values, s, tm):
+    def check_stagnation(self, fitness_values, s, tm, mean):
+        reasons = []
+
         # Heuristic 1: All fitness values are NaN or infinite
         if np.all(np.isnan(fitness_values)) or np.all(np.isinf(fitness_values)):
-            return True
+            reasons.append("All fitness values are NaN or infinite.")
 
         # Heuristic 2: Covariance matrix values too high
         if np.linalg.cond(tm) > 1e14:
-            return True
+            reasons.append(f"Covariance matrix condition number is too high: {np.linalg.cond(tm)}")
 
         if self.history is None:
             self.history = []
@@ -229,37 +235,45 @@ class MAES_IPOP(ES):
             10.0 + ((30.0 * self.ndim_problem) / self.n_individuals))) and \
                                               ((np.max(self.history) == np.min(self.history)) or \
                                                ((np.max(self.history) - np.min(self.history)) < 1e-12 and (
-                                                           np.ptp(fitness_values) < 1e-12)))
+                                                       np.ptp(fitness_values) < 1e-12)))
 
         if is_objective_function_range_too_low:
-            return True
+            reasons.append("No progress in optimization: range of best objective function values is too low.")
 
         # Heuristic 4: Standard deviation too small
         tolX = 1e-12 * self.sigma
         is_standard_deviation_too_small = (np.all(np.abs(tm) < tolX) and np.all(np.abs(s) < tolX))
 
         if is_standard_deviation_too_small:
-            return True
+            reasons.append(f"Standard deviation too small: tolX = {tolX}")
 
-        # # Heuristic 5: No effect axis
-        # ith = (self._n_generations % self.ndim_problem)
-        # tmpXmean = mean + 0.1 * self.sigma * np.dot(tm, np.random.normal(size=self.ndim_problem))
-        #
-        # is_no_effect_axis = (ith < len(tmpXmean) and tmpXmean[ith] == mean[ith])
-        #
-        # if is_no_effect_axis:
-        #     return True
-        #
-        # # Heuristic 6: No effect coordinate
-        # testC = 0.2 * self.sigma * tm
-        # eigvals, eigvecs = np.linalg.eigh(testC)
-        # col_values = np.sqrt(np.abs(eigvals))
-        # tmpXmean = mean + self.sigma * np.dot(eigvecs, col_values)
-        #
-        # is_no_effect_coord = np.all(mean == tmpXmean)
-        #
-        # if is_no_effect_coord:
-        #     return True
+        # Heuristic 5: No effect axis
+        ith = (self._n_generations % self.ndim_problem)
+        tmpXmean = mean + 0.1 * self.sigma * np.dot(tm, np.random.normal(size=self.ndim_problem))
+
+        is_no_effect_axis = (ith < len(tmpXmean) and tmpXmean[ith] == mean[ith])
+
+        if is_no_effect_axis:
+            reasons.append(
+                "No effect axis: adding 0.1-standard deviation vector in a principal axis direction does not change the mean.")
+
+        # Heuristic 6: No effect coordinate
+        testC = 0.2 * self.sigma * tm
+        eigvals, eigvecs = np.linalg.eigh(testC)
+        col_values = np.sqrt(np.abs(eigvals))
+        tmpXmean = mean + self.sigma * np.dot(eigvecs, col_values)
+
+        is_no_effect_coord = np.all(mean == tmpXmean)
+
+        if is_no_effect_coord:
+            reasons.append(
+                "No effect coordinate: adding 0.2-standard deviation in each coordinate does not change the mean.")
+
+        if reasons:
+            print("Stagnation detected for the following reasons:")
+            for reason in reasons:
+                print(reason)
+            return True
 
         return False
 

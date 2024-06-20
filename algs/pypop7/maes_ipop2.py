@@ -236,18 +236,29 @@ class MAES_IPOP2(ES):
         if len(self.history) > (10.0 + ((30.0 * self.ndim_problem) / self.n_individuals)):
             self.history.pop(0)
 
-        is_objective_function_range_too_low = (len(self.history) == int(
-            10.0 + ((30.0 * self.ndim_problem) / self.n_individuals))) and \
-                                              ((np.max(self.history) == np.min(self.history)) or \
-                                               ((np.max(self.history) - np.min(self.history)) < 1e-12 and (
-                                                       np.ptp(fitness_values) < 1e-12)))
+
+        tol_fitness_function = 1e-12
+
+        # sprawdzamy czy historia jest dostatecznie długa aby mierzyc stagnacje
+        minimum_history_length = (len(self.history) == int(10.0 + ((30.0 * self.ndim_problem) / self.n_individuals)))
+
+        fitness_min_equals_max = (np.max(self.history) == np.min(self.history))
+        fitness_min_almost_eq_max = (np.max(self.history) - np.min(self.history)) < tol_fitness_function
+        fitness_function_peek2peek_too_small = (np.ptp(fitness_values) < tol_fitness_function)
+
+        fitness_fun_all_conditions = \
+            (fitness_min_equals_max or (fitness_min_almost_eq_max and fitness_function_peek2peek_too_small))
+
+        is_objective_function_range_too_low = minimum_history_length and fitness_fun_all_conditions
 
         if is_objective_function_range_too_low:
             reasons.append("No progress in optimization: range of best objective function values is too low.")
 
         # Heuristic 4: Standard deviation too small
         tolX = 1e-12 * self.sigma
-        is_standard_deviation_too_small = (np.all(np.abs(tm) < tolX) and np.all(np.abs(s) < tolX))
+        all_els_evolution_path_too_small = np.all(np.abs(s) < tolX)
+        all_matrix_m_elements_too_small = np.all(np.abs(tm) < tolX)
+        is_standard_deviation_too_small = (all_matrix_m_elements_too_small and all_els_evolution_path_too_small)
 
         if is_standard_deviation_too_small:
             reasons.append(f"Standard deviation too small: tolX = {tolX}")

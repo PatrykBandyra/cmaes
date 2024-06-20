@@ -896,3 +896,27 @@ class Schaffer(BaseFunction):
             scalar fitness.
         """
         return schaffer(x)
+
+
+def lunacek_bi_rastrigin(x):
+    """Lunacek bi-Rastrigin function.
+
+    Parameters
+    ----------
+    x : ndarray
+        input vector.
+
+    Returns
+    -------
+    y : float
+        scalar fitness.
+    """
+    d = len(x)
+    s = 1 - 1 / (2 * np.sqrt(d + 20) - 8.2)
+    mu1 = 2.5
+    mu2 = -np.sqrt((mu1 ** 2 - 1) / s)
+    sum1 = np.sum((x - mu1) ** 2)
+    sum2 = np.sum((x - mu2) ** 2)
+    y = np.minimum(sum1, d + s * sum2) + 10 * (d - np.sum(np.cos(2 * np.pi * (x - mu1))))
+
+    return y

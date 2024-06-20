@@ -7,10 +7,10 @@ class MAES(ES):
     """Matrix Adaptation Evolution Strategy (MAES).
 
     .. note:: `MAES` is a powerful *simplified* version of the well-established `CMA-ES` algorithm nearly without
-       significant performance loss, designed in 2017 by `Beyer <https://homepages.fhv.at/hgb/>`_ and `Sendhoff
-       <https://tinyurl.com/26szwuaa>`_. One obvious advantage of such a simplification is to help better understand
-       the underlying working principles (e.g., **invariance** and **unbias**) of `CMA-ES`, which are often thought to
-       be rather complex for newcomers. It is **highly recommended** to first attempt more advanced ES variants (e.g.,
+       significant performance loss, designed in 2017 by `Beyer <https://homepages.fhv.at/hgb/>`_ and Sendhoff
+       (*IEEE Fellow*). One obvious advantage of such a simplification is to help better understand the underlying
+       working principles (e.g., **invariance** and **unbias**) of `CMA-ES`, which are often thought to be rather
+       complex for newcomers. It is **highly recommended** to first attempt more advanced `ES` variants (e.g.,
        `LMCMA`, `LMMAES`) for large-scale black-box optimization, since `MAES` has a *cubic* time complexity (w.r.t.
        each sampling). Note that another improved version called `FMAES` provides a *relatively more efficient*
        implementation for `MAES` with *quadratic* time complexity (w.r.t. each sampling).
@@ -42,7 +42,7 @@ class MAES(ES):
 
     Examples
     --------
-    Use the optimizer `MAES` to minimize the well-known test function
+    Use the black-box optimizer `MAES` to minimize the well-known test function
     `Rosenbrock <http://en.wikipedia.org/wiki/Rosenbrock_function>`_:
 
     .. code-block:: python
@@ -51,22 +51,23 @@ class MAES(ES):
        >>> import numpy  # engine for numerical computing
        >>> from pypop7.benchmarks.base_functions import rosenbrock  # function to be minimized
        >>> from pypop7.optimizers.es.maes import MAES
-       >>> problem = {'fitness_function': rosenbrock,  # define problem arguments
+       >>> problem = {'fitness_function': rosenbrock,  # to define problem arguments
        ...            'ndim_problem': 2,
        ...            'lower_boundary': -5.0*numpy.ones((2,)),
        ...            'upper_boundary': 5.0*numpy.ones((2,))}
-       >>> options = {'max_function_evaluations': 5000,  # set optimizer options
+       >>> options = {'max_function_evaluations': 5000,  # to set optimizer options
        ...            'seed_rng': 2022,
        ...            'mean': 3.0*numpy.ones((2,)),
-       ...            'sigma': 0.1}  # the global step-size may need to be tuned for better performance
-       >>> maes = MAES(problem, options)  # initialize the optimizer class
-       >>> results = maes.optimize()  # run the optimization process
-       >>> # return the number of function evaluations and best-so-far fitness
+       ...            'sigma': 3.0}  # global step-size may need to be fine-tuned for better performance
+       >>> maes = MAES(problem, options)  # to initialize the optimizer class
+       >>> results = maes.optimize()  # to run the optimization/evolution process
        >>> print(f"MAES: {results['n_function_evaluations']}, {results['best_so_far_y']}")
-       MAES: 5000, 2.129367016460251e-19
+       MAES: 5000, 1.3259e-17
 
-    For its correctness checking of coding, refer to `this code-based repeatability report
-    <https://tinyurl.com/3zvve79b>`_ for more details.
+    For its correctness checking of Python coding, please refer to `this code-based repeatability report
+    <https://github.com/Evolutionary-Intelligence/pypop/blob/main/pypop7/optimizers/es/_repeat_maes.py>`_
+    for all details. For *pytest*-based automatic testing, please see `test_maes.py
+    <https://github.com/Evolutionary-Intelligence/pypop/blob/main/pypop7/optimizers/es/test_maes.py>`_.
 
     Attributes
     ----------
@@ -96,7 +97,7 @@ class MAES(ES):
     <https://ieeexplore.ieee.org/document/7875115>`_
     IEEE Transactions on Evolutionary Computation, 21(5), pp.746-759.
 
-    See the official Matlab version from Prof. Beyer:
+    Please refer to the *official* Matlab version from Prof. Beyer:
     https://homepages.fhv.at/hgb/downloads/ForDistributionFastMAES.tar
     """
     def __init__(self, problem, options):

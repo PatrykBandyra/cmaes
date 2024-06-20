@@ -4,7 +4,6 @@ from enum import IntEnum
 
 import numpy as np  # engine for numerical computing
 
-
 class Terminations(IntEnum):
     """Helper class used by all optimizer classes."""
     NO_TERMINATION = 0
@@ -70,8 +69,7 @@ class Optimizer(object):
         self.seed_optimization = options.get('seed_optimization', self.rng.integers(np.iinfo(np.int64).max))
         self.rng_optimization = np.random.default_rng(self.seed_optimization)
         self.saving_fitness = options.get('saving_fitness', 0)
-        # FIXME zmienilem na 0
-        self.verbose = options.get('verbose', 0)
+        self.verbose = options.get('verbose', 10)
 
         # auxiliary members
         self.Terminations, self.termination_signal = Terminations, 0  # 0 -> NO_TERMINATION
@@ -81,8 +79,7 @@ class Optimizer(object):
         self.runtime, self.start_time = options.get('runtime', 0), None
         self.best_so_far_y, self.best_so_far_x = options.get('best_so_far_y', np.Inf), None
         self.fitness = None
-        #FIXME zmienilem na False
-        self.is_restart = options.get('is_restart', False)
+        self.is_restart = options.get('is_restart', True)
         # all members of *early stopping* (closed by default according to following settings)
         self.early_stopping_evaluations = options.get('early_stopping_evaluations', np.Inf)
         self.early_stopping_threshold = options.get('early_stopping_threshold', 0.0)

@@ -207,7 +207,9 @@ class MAES_IPOP(ES):
             mean, s, tm = self._update_distribution(z, d, mean, s, tm, y)
             self._print_verbose_info(fitness, y)
             self._n_generations += 1
-            if self.check_stagnation(y, s, tm, mean):
+
+            # FIXME moje heurystyki wylaczone
+            if self.check_stagnation(y, s, tm, mean) and False:
                 self.increment_pop_size()
                 z, d, mean, s, tm, y = self.initialize(True)
             if self.is_restart:
@@ -233,17 +235,17 @@ class MAES_IPOP(ES):
     def check_stagnation(self, y, s, tm, mean):
         reasons = []
 
-        # heuristic 0:
-        min_y = np.min(y)
-        if min_y < self._list_fitness[-1]:
-            self._list_fitness.append(min_y)
-        else:
-            self._list_fitness.append(self._list_fitness[-1])
-        is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
-        if len(self._list_fitness) >= self.stagnation:
-            is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
-        if bool(is_restart_1) or bool(is_restart_2):
-            reasons.append("Stagnation detected.")
+        # # heuristic 0:
+        # min_y = np.min(y)
+        # if min_y < self._list_fitness[-1]:
+        #     self._list_fitness.append(min_y)
+        # else:
+        #     self._list_fitness.append(self._list_fitness[-1])
+        # is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
+        # if len(self._list_fitness) >= self.stagnation:
+        #     is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
+        # if bool(is_restart_1) or bool(is_restart_2):
+        #     reasons.append("Stagnation detected.")
 
 
         # Heuristic 1: All fitness values are NaN or infinite

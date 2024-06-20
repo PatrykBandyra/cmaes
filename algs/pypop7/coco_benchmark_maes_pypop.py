@@ -28,7 +28,8 @@ if __name__ == '__main__':
         options = {'max_function_evaluations': function.dimension * budget_multiplier,
                    'seed_rng': 2022,
                    'x': function.initial_solution,
-                   'sigma': sigma}
+                   'sigma': sigma,
+                   'is_restart': False}
         solver = MAES(problem, options)
         print(solver.optimize())
     cocopp.main(observer.result_folder)

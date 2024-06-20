@@ -9,7 +9,7 @@ import numpy as np
 import cocoex  # experimentation module of `COCO`
 import cocopp  # post-processing module of `COCO`
 
-from maes_ipop import MAES_IPOP
+from maes import MAES
 
 if __name__ == '__main__':
     suite, output = 'bbob', 'coco-maes-ipop'
@@ -30,7 +30,7 @@ if __name__ == '__main__':
                    'x': function.initial_solution,
                    'sigma': sigma,
                    'is_restart': True}
-        solver = MAES_IPOP(problem, options)
+        solver = MAES(problem, options)
         print(solver.optimize())
     cocopp.main(observer.result_folder)
     # webbrowser.open('file://' + os.getcwd() + '/ppdata/index.html')

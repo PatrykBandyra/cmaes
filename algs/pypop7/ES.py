@@ -2,7 +2,6 @@ import numpy as np  # engine for numerical computing
 
 from optimizer import Optimizer  # abstract class of all black-box optimizers (BBO)
 
-
 class ES(Optimizer):
     """Evolution Strategies (ES).
 
@@ -29,7 +28,9 @@ class ES(Optimizer):
        (deep neural network-based) policy search in reinforcement learning.
 
        For some interesting applications of `ES`, please refer to `[Yang et al., 2024, CVPR]
-       <https://diffusion-es.github.io/>`_, just to name a few.
+       <https://diffusion-es.github.io/>`_, `[Lee et al., 2023, Science Robotics]
+       <https://www.science.org/doi/10.1126/scirobotics.adg3705>`_, `[Koginov et al., 2023, TMRB]
+       <https://ieeexplore.ieee.org/document/10302449>`_, just to name a few.
 
     Parameters
     ----------
@@ -73,9 +74,9 @@ class ES(Optimizer):
     https://homepages.fhv.at/hgb/downloads/ES-Is-Not-Gradient-Follower.pdf
 
     Ollivier, Y., Arnold, L., Auger, A. and Hansen, N., 2017.
-    Information-geometric optimization algorithms: A unifying picture via invariance principles.
+    `Information-geometric optimization algorithms: A unifying picture via invariance principles.
+    <https://www.jmlr.org/papers/v18/14-467.html>`_
     Journal of Machine Learning Research, 18(18), pp.1-65.
-    https://www.jmlr.org/papers/v18/14-467.html
 
     https://blog.otoro.net/2017/10/29/visual-evolution-strategies/
 
@@ -86,43 +87,43 @@ class ES(Optimizer):
     Springer, Berlin, Heidelberg.
 
     Bäck, T., Foussette, C., & Krause, P. (2013).
-    Contemporary evolution strategies.
+    `Contemporary evolution strategies.
+    <https://link.springer.com/book/10.1007/978-3-642-40137-4>`_
     Berlin: Springer.
-    https://link.springer.com/book/10.1007/978-3-642-40137-4
 
     http://www.scholarpedia.org/article/Evolution_strategies
 
     Beyer, H.G. and Schwefel, H.P., 2002.
-    Evolution strategies–A comprehensive introduction.
+    `Evolution strategies–A comprehensive introduction.
+    <https://link.springer.com/article/10.1023/A:1015059928466>`_
     Natural Computing, 1(1), pp.3-52.
-    https://link.springer.com/article/10.1023/A:1015059928466
 
     Rechenberg, I., 2000.
-    Case studies in evolutionary experimentation and computation.
+    `Case studies in evolutionary experimentation and computation.
+    <https://www.sciencedirect.com/science/article/abs/pii/S0045782599003813>`_
     Computer Methods in Applied Mechanics and Engineering, 186(2-4), pp.125-140.
-    https://www.sciencedirect.com/science/article/abs/pii/S0045782599003813
 
     Rechenberg, I., 1989.
-    Evolution strategy: Nature’s way of optimization.
+    `Evolution strategy: Nature’s way of optimization.
+    <https://link.springer.com/chapter/10.1007/978-3-642-83814-9_6>`_
     In Optimization: Methods and Applications, Possibilities and Limitations (pp. 106-126).
     Springer, Berlin, Heidelberg.
-    https://link.springer.com/chapter/10.1007/978-3-642-83814-9_6
 
     Schwefel, H.P., 1988.
-    Collective intelligence in evolving systems.
+    `Collective intelligence in evolving systems.
+    <https://link.springer.com/chapter/10.1007/978-3-642-73953-8_8>`_
     In Ecodynamics (pp. 95-100). Springer, Berlin, Heidelberg.
-    https://link.springer.com/chapter/10.1007/978-3-642-73953-8_8
 
     Schwefel, H.P., 1984.
-    Evolution strategies: A family of non-linear optimization techniques based on imitating
+    `Evolution strategies: A family of non-linear optimization techniques based on imitating
     some principles of organic evolution.
+    <https://link.springer.com/article/10.1007/BF01876146>`_
     Annals of Operations Research, 1(2), pp.165-167.
-    https://link.springer.com/article/10.1007/BF01876146
 
     Rechenberg, I., 1984.
-    The evolution strategy. A mathematical model of darwinian evolution.
+    `The evolution strategy. A mathematical model of darwinian evolution.
+    <https://link.springer.com/chapter/10.1007/978-3-642-69540-7_13>`_
     In Synergetics—from Microscopic to Macroscopic Order (pp. 122-132). Springer, Berlin, Heidelberg.
-    https://link.springer.com/chapter/10.1007/978-3-642-69540-7_13
     """
     def __init__(self, problem, options):
         Optimizer.__init__(self, problem, options)
@@ -208,16 +209,15 @@ class ES(Optimizer):
                 self._printed_evaluations = self.n_function_evaluations
 
     def restart_reinitialize(self, y):
-        # min_y = np.min(y)
-        # if min_y < self._list_fitness[-1]:
-        #     self._list_fitness.append(min_y)
-        # else:
-        #     self._list_fitness.append(self._list_fitness[-1])
-        # is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
-        # if len(self._list_fitness) >= self.stagnation:
-        #     is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
-        # is_restart = bool(is_restart_1) or bool(is_restart_2)
-        is_restart = False
+        min_y = np.min(y)
+        if min_y < self._list_fitness[-1]:
+            self._list_fitness.append(min_y)
+        else:
+            self._list_fitness.append(self._list_fitness[-1])
+        is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
+        if len(self._list_fitness) >= self.stagnation:
+            is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
+        is_restart = bool(is_restart_1) or bool(is_restart_2)
         if is_restart:
             self._print_verbose_info([], y, True)
             if self.verbose:

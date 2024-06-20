@@ -230,11 +230,24 @@ class MAES_IPOP(ES):
         self.n_individuals *= 2  # Doubling the population size on stagnation
         print("Increased population size to: ", self.n_individuals)
 
-    def check_stagnation(self, fitness_values, s, tm, mean):
+    def check_stagnation(self, y, s, tm, mean):
         reasons = []
 
+        # heuristic 0:
+        min_y = np.min(y)
+        if min_y < self._list_fitness[-1]:
+            self._list_fitness.append(min_y)
+        else:
+            self._list_fitness.append(self._list_fitness[-1])
+        is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
+        if len(self._list_fitness) >= self.stagnation:
+            is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
+        if bool(is_restart_1) or bool(is_restart_2):
+            reasons.append("Stagnation detected.")
+
+
         # Heuristic 1: All fitness values are NaN or infinite
-        if np.all(np.isnan(fitness_values)) or np.all(np.isinf(fitness_values)):
+        if np.all(np.isnan(y)) or np.all(np.isinf(y)):
             reasons.append("All fitness values are NaN or infinite.")
 
         # Heuristic 2: Covariance matrix values too high
@@ -245,7 +258,7 @@ class MAES_IPOP(ES):
             self.history = []
 
         # Heuristic 3: No progress in optimization
-        self.history.append(fitness_values[0])
+        self.history.append(y[0])
         if len(self.history) > (10.0 + ((30.0 * self.ndim_problem) / self.n_individuals)):
             self.history.pop(0)
 
@@ -257,7 +270,7 @@ class MAES_IPOP(ES):
 
         fitness_min_equals_max = (np.max(self.history) == np.min(self.history))
         fitness_min_almost_eq_max = (np.max(self.history) - np.min(self.history)) < tol_fitness_function
-        fitness_function_peek2peek_too_small = (np.ptp(fitness_values) < tol_fitness_function)
+        fitness_function_peek2peek_too_small = (np.ptp(y) < tol_fitness_function)
 
         fitness_fun_all_conditions = \
             (fitness_min_equals_max or (fitness_min_almost_eq_max and fitness_function_peek2peek_too_small))

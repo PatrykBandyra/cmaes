@@ -208,15 +208,16 @@ class ES(Optimizer):
                 self._printed_evaluations = self.n_function_evaluations
 
     def restart_reinitialize(self, y):
-        min_y = np.min(y)
-        if min_y < self._list_fitness[-1]:
-            self._list_fitness.append(min_y)
-        else:
-            self._list_fitness.append(self._list_fitness[-1])
-        is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
-        if len(self._list_fitness) >= self.stagnation:
-            is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
-        is_restart = bool(is_restart_1) or bool(is_restart_2)
+        # min_y = np.min(y)
+        # if min_y < self._list_fitness[-1]:
+        #     self._list_fitness.append(min_y)
+        # else:
+        #     self._list_fitness.append(self._list_fitness[-1])
+        # is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
+        # if len(self._list_fitness) >= self.stagnation:
+        #     is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
+        # is_restart = bool(is_restart_1) or bool(is_restart_2)
+        is_restart = False
         if is_restart:
             self._print_verbose_info([], y, True)
             if self.verbose:

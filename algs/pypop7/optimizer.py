@@ -81,7 +81,8 @@ class Optimizer(object):
         self.runtime, self.start_time = options.get('runtime', 0), None
         self.best_so_far_y, self.best_so_far_x = options.get('best_so_far_y', np.Inf), None
         self.fitness = None
-        self.is_restart = options.get('is_restart', True)
+        #FIXME zmienilem na False
+        self.is_restart = options.get('is_restart', False)
         # all members of *early stopping* (closed by default according to following settings)
         self.early_stopping_evaluations = options.get('early_stopping_evaluations', np.Inf)
         self.early_stopping_threshold = options.get('early_stopping_threshold', 0.0)

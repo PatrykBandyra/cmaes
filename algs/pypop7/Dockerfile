@@ -15,4 +15,4 @@ RUN python3 do.py run-python
 WORKDIR /app
 COPY . .
 #RUN python3 coco_benchmark_maes_pypop.py
-#RUN python3 -m cocopp -o output /app/exdata/coco-maes
+#RUN python3 -m cocopp -o output /app/exdata/coco-pypop-maes

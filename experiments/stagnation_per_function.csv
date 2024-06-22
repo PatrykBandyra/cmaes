@@ -1,0 +1,31 @@
+Funkcja,Rodzaj stagnacji,Ilość
+Attractive Sector f006,NoProgress,92
+Bent Cigar f012,NoProgress,43
+Büche-Rastrigin f004,NoProgress,167
+Different Powers f014,NoProgress,56
+Discus f011,NoProgress,220
+Ellipsoidal Rotated f010,NoProgress,83
+Ellipsoidal f002,NoProgress,79
+Gallagher's 101-me Peaks f020,NoProgress,193
+Gallagher's 21-hi Peaks f021,NoProgress,197
+Griewank-Rosenbrock f018,NoEffectAxis,2
+Griewank-Rosenbrock f018,NoEffectCoord,38
+Griewank-Rosenbrock f018,NoProgress,61
+Katsuura f022,NoProgress,201
+Linear Slope f005,NoProgress,360
+Lunacek bi-Rastrigin f023,NoProgress,286
+Non-Continuous Rastrigin f024,NoProgress,259
+Rastrigin f003,NoProgress,176
+Rosenbrock Rotated f009,NoProgress,84
+Rosenbrock f008,NoProgress,73
+Schaffers F7 f016,NoEffectCoord,1
+Schaffers F7 f016,NoProgress,191
+Schaffers F7 mod. 2 f017,NoEffectAxis,1
+Schaffers F7 mod. 2 f017,NoEffectCoord,49
+Schaffers F7 mod. 2 f017,NoProgress,51
+Schwefel f019,NoProgress,254
+Sharp Ridge f013,NoEffectCoord,56
+Sharp Ridge f013,NoProgress,51
+Sphere f001,NoProgress,179
+Step Ellipsoidal f007,NoProgress,212
+Weierstrass f015,NoProgress,182

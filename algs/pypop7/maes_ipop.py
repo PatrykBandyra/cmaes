@@ -103,6 +103,9 @@ class MAES_IPOP(ES_heuristics):
     """
 
     def __init__(self, problem, options):
+        self.p_stagn_axis_multiplier = options.get('p_stagn_axis_multiplier', 0.1)
+        self.pstagn_cord_multiplier = options.get('pstagn_cord_multiplier', 0.2)
+
         ES_heuristics.__init__(self, problem, options)
         self.fitness_function = problem['fitness_function']
         # File to store stagnation reasons and ipop
@@ -234,16 +237,9 @@ class MAES_IPOP(ES_heuristics):
         reasons = []
 
         # heuristic 0:
-        min_y = np.min(y)
-        if min_y < self._list_fitness[-1]:
-            self._list_fitness.append(min_y)
-        else:
-            self._list_fitness.append(self._list_fitness[-1])
-        is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
-        if len(self._list_fitness) >= self.stagnation:
-            is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
-        if bool(is_restart_1) or bool(is_restart_2):
-            reasons.append("Stagnation detected.")
+        no_progress_fit_fun = self.check_fit_fun_progress(y)
+        if no_progress_fit_fun:
+            reasons.append("Stagnation detected. No progress in optimization: range of best fitness function values is too low.")
 
         # Heuristic 1: All fitness values are NaN or infinite
         if np.all(np.isnan(y)) or np.all(np.isinf(y)):
@@ -253,30 +249,6 @@ class MAES_IPOP(ES_heuristics):
         if np.linalg.cond(tm) > 1e14:
             reasons.append(f"Covariance matrix condition number is too high: {np.linalg.cond(tm)}")
 
-        if self.history is None:
-            self.history = []
-
-        # Heuristic 3: No progress in optimization
-        self.history.append(y[0])
-        if len(self.history) > (10.0 + ((30.0 * self.ndim_problem) / self.n_individuals)):
-            self.history.pop(0)
-
-        tol_fitness_function = 1e-12
-
-        # sprawdzamy czy historia jest dostatecznie długa aby mierzyc stagnacje
-        minimum_history_length = (len(self.history) == int(10.0 + ((30.0 * self.ndim_problem) / self.n_individuals)))
-
-        fitness_min_equals_max = (np.max(self.history) == np.min(self.history))
-        fitness_min_almost_eq_max = (np.max(self.history) - np.min(self.history)) < tol_fitness_function
-        fitness_function_peek2peek_too_small = (np.ptp(y) < tol_fitness_function)
-
-        fitness_fun_all_conditions = \
-            (fitness_min_equals_max or (fitness_min_almost_eq_max and fitness_function_peek2peek_too_small))
-
-        is_objective_function_range_too_low = minimum_history_length and fitness_fun_all_conditions
-
-        if is_objective_function_range_too_low:
-            reasons.append("No progress in optimization: range of best objective function values is too low.")
 
         # Heuristic 4: Standard deviation too small
         tolX = 1e-12 * self.sigma
@@ -289,7 +261,8 @@ class MAES_IPOP(ES_heuristics):
 
         # Heuristic 5: No effect axis
         ith = (self._n_generations % self.ndim_problem)
-        tmpXmean = mean + 0.1 * self.sigma * np.dot(tm, np.random.normal(size=self.ndim_problem))
+
+        tmpXmean = mean + self.p_stagn_axis_multiplier * self.sigma * np.dot(tm, np.random.normal(size=self.ndim_problem))
 
         is_no_effect_axis = (ith < len(tmpXmean) and tmpXmean[ith] == mean[ith])
 
@@ -298,7 +271,8 @@ class MAES_IPOP(ES_heuristics):
                 "No effect axis: adding 0.1-standard deviation vector in a principal axis direction does not change the mean.")
 
         # Heuristic 6: No effect coordinate
-        testC = 0.2 * self.sigma * tm
+
+        testC = self.pstagn_cord_multiplier * self.sigma * tm
         eigvals, eigvecs = np.linalg.eigh(testC)
         col_values = np.sqrt(np.abs(eigvals))
         tmpXmean = mean + self.sigma * np.dot(eigvecs, col_values)
@@ -318,3 +292,27 @@ class MAES_IPOP(ES_heuristics):
             return True
 
         return False
+
+    def check_fit_fun_progress(self, y):
+        '''
+        Check if the fitness function is making progress.
+
+        długośc listy z historią : int(10 + np.ceil(30*self.ndim_problem/self.n_individuals))
+        zgodnie z publikacją: http://www.cmap.polytechnique.fr/~nikolaus.hansen/cec2005ipopcmaes.pdf
+
+        :param y: actual fitness function value
+        :return:
+        '''
+
+
+        min_y = np.min(y)
+        if min_y < self._list_fitness[-1]:
+            self._list_fitness.append(min_y)
+        else:
+            self._list_fitness.append(self._list_fitness[-1])
+        is_restart_1, is_restart_2 = self.sigma < self.sigma_threshold, False
+
+        if len(self._list_fitness) >= self.stagnation:
+            is_restart_2 = (self._list_fitness[-self.stagnation] - self._list_fitness[-1]) < self.fitness_diff
+        no_progress_fit_fun = bool(is_restart_1) or bool(is_restart_2)
+        return no_progress_fit_fun

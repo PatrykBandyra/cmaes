@@ -16,7 +16,7 @@ if __name__ == '__main__':
     budget_multiplier = 1e3  # or 1e4, 1e5, ...
     observer = cocoex.Observer(suite, 'result_folder: ' + output)
     minimal_print = cocoex.utilities.MiniPrint()
-    for function in cocoex.Suite("bbob", '', "function_indices:20-24"):
+    for function in cocoex.Suite("bbob", '', "function_indices:1-24"):
         print("Next function...\n" )
         print(function)
         function.observe_with(observer)  # generate data for `cocopp` post-processing

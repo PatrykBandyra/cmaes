@@ -14,5 +14,5 @@ RUN python3 do.py run-python
 # Running benchmark and processing data
 WORKDIR /app
 COPY . .
-#RUN python3 coco_benchmark_maes_pypop.py
-#RUN python3 -m cocopp -o output /app/exdata/coco-pypop-maes
+#RUN python3 coco_benchmark_cmaes.py
+#RUN python3 -m cocopp -o output /app/exdata/coco-cmaes

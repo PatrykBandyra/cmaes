@@ -3,7 +3,7 @@ import numpy as np
 import re
 
 # Define the path to the CSV file
-file_path = 'maes_ipop_default/ipop_log.csv'
+file_path = 'maes_ipop/ipop_log.csv'
 
 # Create a dictionary to map function identifiers to their names
 function_mapping = {
